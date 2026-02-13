@@ -2,48 +2,91 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Video Landing Page</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
         body, html {
-            height: 100%;
-            overflow: hidden; /* Ortiqcha aylantirishni yo'qotadi */
-            background-color: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background-color: #000; font-family: sans-serif;
+            overflow: hidden; color: white;
         }
 
-        .video-container {
-            position: relative;
-            width: 100%;
-            height: 100vh; /* Mobil ekranning to'liq balandligi */
-            max-width: 500px; /* Kompyuterda ko'rsa ham telefon ko'rinishida qoladi */
-            background: #000;
+        /* Telefon tik turganda ko'rinadigan qatlam (Overlay) */
+        #orientation-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 100;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+        }
+
+        /* Telefonni aylantirish animatsiyasi */
+        .phone-icon {
+            width: 50px; height: 100px; border: 3px solid #fff;
+            border-radius: 10px; position: relative;
+            animation: rotatePhone 2s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes rotatePhone {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(-90deg); }
+            100% { transform: rotate(-90deg); }
+        }
+
+        /* Video konteyneri */
+        .video-wrapper {
+            display: none; /* Faqat yonbosh bo'lganda ko'rsatamiz */
+            width: 100%; height: 100vh;
         }
 
         video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover; /* Videoni ekran bo'ylab cho'zadi yoki kesadi (bo'sh joy qoldirmaydi) */
+            width: 100%; height: 100%; object-fit: contain;
+        }
+
+        /* Ovozni yoqish tugmasi */
+        #play-btn {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 15px 30px; background: #ff0000;
+            color: white; border: none; border-radius: 5px;
+            cursor: pointer; font-size: 18px; z-index: 50;
+        }
+
+        /* Faqat telefon yonbosh bo'lganda ishlaydigan CSS */
+        @media screen and (orientation: landscape) {
+            #orientation-overlay { display: none; }
+            .video-wrapper { display: block; }
         }
     </style>
 </head>
 <body>
 
-    <div class="video-container">
-        <video 
-            autoplay 
-            muted 
-            loop 
-            playsinline 
-            controlsList="nodownload">
+    <div id="orientation-overlay">
+        <div class="phone-icon"></div>
+        <p>Iltimos, videoni ko'rish uchun <br> <b>telefoningizni yonbosh qiling</b></p>
+    </div>
+
+    <div class="video-wrapper">
+        <button id="play-btn">Videoni ovoz bilan ko'rish</button>
+        <video id="myVideo" playsinline>
             <source src="assets/video.mp4" type="video/mp4">
-            Sizning brauzeringiz videoni qo'llab-quvvatlamaydi.
         </video>
     </div>
 
+    <script>
+        const video = document.getElementById('myVideo');
+        const playBtn = document.getElementById('play-btn');
+
+        playBtn.addEventListener('click', () => {
+            video.play(); // Ovoz bilan boshlanadi
+            playBtn.style.display = 'none'; // Tugmani yashirish
+        });
+
+        // Agar foydalanuvchi videoni o'rtasida yana tik qilsa, pauza qilish (ixtiyoriy)
+        window.addEventListener("orientationchange", function() {
+            if (window.orientation === 0) { // Tik holat
+                video.pause();
+            }
+        });
+    </script>
 </body>
 </html>
