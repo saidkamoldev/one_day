@@ -2,170 +2,173 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Premium Mobile Cinema</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Premium Video Experience</title>
     <style>
-        :root { --main: #fff; --bg: #000; }
+        :root { --accent: #ffffff; --bg: #000; }
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         body, html { 
             width: 100%; height: 100%; background: var(--bg); 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica;
+            font-family: -apple-system, system-ui, sans-serif;
             color: white; overflow: hidden;
         }
 
-        /* 1. Animatsiya (Tik holat uchun) */
-        #rotate-notice {
+        /* 1. Sanoq Animatsiyasi (Preloader) */
+        #loader {
             position: fixed; inset: 0; background: var(--bg); z-index: 2000;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
 
-        .phone-icon {
-            width: 45px; height: 85px; border: 2.5px solid var(--main);
-            border-radius: 7px; animation: rotateDevice 2.5s ease-in-out infinite;
-            margin-bottom: 25px; position: relative;
+        .countdown-number {
+            font-size: 80px; font-weight: 800; letter-spacing: -2px;
+            animation: pulse 1s ease-in-out infinite;
         }
 
-        @keyframes rotateDevice {
-            0% { transform: rotate(0deg); }
-            60%, 100% { transform: rotate(-90deg); }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        .loading-text {
+            margin-top: 20px; font-size: 12px; letter-spacing: 3px;
+            text-transform: uppercase; opacity: 0.5;
         }
 
         /* 2. Player Konteyneri */
-        #video-container {
-            display: none; width: 100%; height: 100vh; position: relative; background: #000;
+        #main-wrapper {
+            display: none; width: 100%; height: 100vh; position: relative;
         }
 
         video {
-            width: 100%; height: 100%; object-fit: contain;
-            /* iOS Safari uchun maxsus */
-            -webkit-playsinline: inline;
+            width: 100%; height: 100%;
+            object-fit: contain; /* Shunda ham vertikal, ham gorizontalda chiroyli turadi */
+            background: #000;
         }
 
-        /* 3. Custom Player Controls */
+        /* 3. Maxsus Boshqaruv Paneli (Safari uchun barqaror) */
         .controls {
             position: absolute; bottom: 0; left: 0; right: 0;
-            background: linear-gradient(transparent, rgba(0,0,0,0.8));
-            padding: 20px 30px; display: flex; align-items: center; gap: 15px;
-            z-index: 100; opacity: 0; transition: opacity 0.3s;
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
+            padding: 30px 20px; display: flex; align-items: center; gap: 15px;
+            z-index: 100; opacity: 1;
         }
 
-        #video-container:hover .controls, .controls:active { opacity: 1; }
-
-        .play-pause { background: none; border: none; color: white; cursor: pointer; font-size: 20px; width: 30px; }
+        .btn { background: none; border: none; color: white; cursor: pointer; font-size: 18px; }
+        
+        .progress-area {
+            flex-grow: 1; height: 6px; background: rgba(255,255,255,0.2);
+            border-radius: 3px; position: relative; cursor: pointer;
+        }
 
         .progress-bar {
-            flex-grow: 1; height: 4px; background: rgba(255,255,255,0.3);
-            border-radius: 2px; position: relative; cursor: pointer;
+            height: 100%; background: #ff0000; width: 0%; border-radius: 3px;
         }
 
-        .progress-filled {
-            height: 100%; background: #ff0000; width: 0%; border-radius: 2px;
-        }
+        .time-display { font-size: 12px; font-variant-numeric: tabular-nums; opacity: 0.8; }
 
-        .time { font-size: 12px; font-variant-numeric: tabular-nums; }
-
-        /* Start Button */
-        #start-screen {
+        /* Start Overlay (Safari ovoz ruxsati uchun) */
+        #unmute-overlay {
             position: absolute; inset: 0; z-index: 150;
-            background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center;
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            background: rgba(0,0,0,0.6); display: flex; 
+            justify-content: center; align-items: center; backdrop-filter: blur(10px);
         }
 
-        .btn-start {
-            padding: 15px 40px; border: 1px solid #fff; background: none;
-            color: #fff; border-radius: 50px; text-transform: uppercase;
-            letter-spacing: 2px; cursor: pointer; font-size: 14px;
-        }
-
-        @media screen and (orientation: landscape) {
-            #rotate-notice { display: none; }
-            #video-container { display: flex; }
+        .start-btn {
+            padding: 16px 32px; border: 2px solid #fff; background: #fff;
+            color: #000; border-radius: 4px; font-weight: 700;
+            text-transform: uppercase; cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <div id="rotate-notice">
-        <div class="phone-icon"></div>
-        <p style="letter-spacing: 1px; opacity: 0.7;">ILTIMOS, EKRANNI AYLANTIRING</p>
+    <div id="loader">
+        <div class="countdown-number" id="timer">5</div>
+        <p class="loading-text">Tayyorlanmoqda...</p>
     </div>
 
-    <div id="video-container">
-        <div id="start-screen">
-            <button class="btn-start" onclick="initVideo()">Videoni ko'rish</button>
+    <div id="main-wrapper">
+        <div id="unmute-overlay">
+            <button class="start-btn" onclick="launchVideo()">Tomoshani boshlash</button>
         </div>
 
-        <video id="mainVideo" playsinline webkit-playsinline>
+        <video id="videoPlayer" playsinline webkit-playsinline>
             <source src="assets/video.mp4" type="video/mp4">
         </video>
 
         <div class="controls">
-            <button class="play-pause" id="playBtn">II</button>
-            <div class="time" id="currentTime">0:00</div>
-            <div class="progress-bar" id="progressContainer">
-                <div class="progress-filled" id="progressFilled"></div>
+            <button class="btn" id="playPause">▶</button>
+            <span class="time-display" id="current">00:00</span>
+            <div class="progress-area" id="progressRoot">
+                <div class="progress-bar" id="progressBar"></div>
             </div>
-            <div class="time" id="duration">0:00</div>
+            <span class="time-display" id="total">00:00</span>
         </div>
     </div>
 
     <script>
-        const video = document.getElementById('mainVideo');
-        const playBtn = document.getElementById('playBtn');
-        const progressFilled = document.getElementById('progressFilled');
-        const progressContainer = document.getElementById('progressContainer');
-        const curTimeText = document.getElementById('currentTime');
-        const durText = document.getElementById('duration');
-        const startScreen = document.getElementById('start-screen');
+        const timerEl = document.getElementById('timer');
+        const loader = document.getElementById('loader');
+        const wrapper = document.getElementById('main-wrapper');
+        const video = document.getElementById('videoPlayer');
+        const playBtn = document.getElementById('playPause');
+        const progressRoot = document.getElementById('progressRoot');
+        const progressBar = document.getElementById('progressBar');
 
-        function initVideo() {
+        // 1. Sanoq tizimi
+        let count = 5;
+        const countdown = setInterval(() => {
+            count--;
+            timerEl.innerText = count;
+            if (count <= 0) {
+                clearInterval(countdown);
+                loader.style.display = 'none';
+                wrapper.style.display = 'block';
+            }
+        }, 1000);
+
+        // 2. Videoni ishga tushirish (Ovoz bilan)
+        function launchVideo() {
             video.muted = false;
             video.play();
-            startScreen.style.display = 'none';
+            document.getElementById('unmute-overlay').style.display = 'none';
+            playBtn.innerText = 'II';
         }
 
-        // Play/Pause
-        playBtn.addEventListener('click', () => {
+        // 3. Play/Pause funksiyasi
+        playBtn.onclick = () => {
             if (video.paused) {
                 video.play();
-                playBtn.textContent = 'II';
+                playBtn.innerText = 'II';
             } else {
                 video.pause();
-                playBtn.textContent = '▶';
+                playBtn.innerText = '▶';
             }
-        });
+        };
 
-        // Vaqtni yangilash
-        video.addEventListener('timeupdate', () => {
-            const percent = (video.currentTime / video.duration) * 100;
-            progressFilled.style.width = `${percent}%`;
-            curTimeText.textContent = formatTime(video.currentTime);
-        });
+        // 4. Progress bar va Vaqt
+        video.ontimeupdate = () => {
+            const p = (video.currentTime / video.duration) * 100;
+            progressBar.style.width = p + '%';
+            document.getElementById('current').innerText = formatTime(video.currentTime);
+        };
 
-        video.addEventListener('loadedmetadata', () => {
-            durText.textContent = formatTime(video.duration);
-        });
+        video.onloadedmetadata = () => {
+            document.getElementById('total').innerText = formatTime(video.duration);
+        };
 
-        // Oldinga/ortga surish
-        progressContainer.addEventListener('click', (e) => {
-            const scrubTime = (e.offsetX / progressContainer.offsetWidth) * video.duration;
-            video.currentTime = scrubTime;
-        });
+        progressRoot.onclick = (e) => {
+            const rect = progressRoot.getBoundingClientRect();
+            const pos = (e.clientX - rect.left) / rect.width;
+            video.currentTime = pos * video.duration;
+        };
 
-        function formatTime(time) {
-            const mins = Math.floor(time / 60);
-            const secs = Math.floor(time % 60);
-            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        function formatTime(s) {
+            const m = Math.floor(s / 60);
+            const sec = Math.floor(s % 60);
+            return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
         }
-
-        // Safari uchun ekran o'zgarganda avtomatik pauza
-        window.addEventListener("orientationchange", () => {
-            if (window.orientation === 0) {
-                video.pause();
-                startScreen.style.display = 'flex';
-            }
-        });
     </script>
 </body>
 </html>
