@@ -3,89 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Video Landing Page</title>
+    <title>Premium Video Experience</title>
     <style>
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background-color: #000; font-family: sans-serif;
-            overflow: hidden; color: white;
+        :root { --main-color: #ffffff; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body, html { 
+            width: 100%; height: 100%; 
+            background-color: #050505; 
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            color: white; overflow: hidden;
         }
 
-        /* Telefon tik turganda ko'rinadigan qatlam (Overlay) */
+        /* 1. Telefonni aylantirish overlay (Landscape Alert) */
         #orientation-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 100;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center; text-align: center;
+            position: fixed; inset: 0;
+            background: radial-gradient(circle, #1a1a1a 0%, #000 100%);
+            z-index: 999; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
         }
 
-        /* Telefonni aylantirish animatsiyasi */
-        .phone-icon {
-            width: 50px; height: 100px; border: 3px solid #fff;
-            border-radius: 10px; position: relative;
-            animation: rotatePhone 2s ease-in-out infinite;
-            margin-bottom: 20px;
+        .phone-wrapper {
+            width: 60px; height: 110px;
+            border: 3px solid var(--main-color);
+            border-radius: 8px; position: relative;
+            animation: rotateDevice 2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
         }
-        @keyframes rotatePhone {
+        .phone-wrapper::after {
+            content: ''; position: absolute; bottom: 5px; left: 50%;
+            transform: translateX(-50%); width: 8px; height: 8px;
+            border: 1px solid var(--main-color); border-radius: 50%;
+        }
+
+        @keyframes rotateDevice {
             0% { transform: rotate(0deg); }
-            50% { transform: rotate(-90deg); }
-            100% { transform: rotate(-90deg); }
+            70%, 100% { transform: rotate(-90deg); }
         }
 
-        /* Video konteyneri */
-        .video-wrapper {
-            display: none; /* Faqat yonbosh bo'lganda ko'rsatamiz */
-            width: 100%; height: 100vh;
+        .text-hint { margin-top: 30px; font-weight: 300; letter-spacing: 1px; text-transform: uppercase; font-size: 12px; opacity: 0.8; }
+
+        /* 2. Video Player Dizayni */
+        .main-container {
+            display: none; width: 100%; height: 100vh; position: relative;
         }
 
         video {
-            width: 100%; height: 100%; object-fit: contain;
+            width: 100%; height: 100%; object-fit: cover; /* Ekranni to'liq to'ldiradi */
         }
 
-        /* Ovozni yoqish tugmasi */
-        #play-btn {
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 15px 30px; background: #ff0000;
-            color: white; border: none; border-radius: 5px;
-            cursor: pointer; font-size: 18px; z-index: 50;
+        /* Ovoz nazorati (Mute/Unmute) */
+        .sound-control {
+            position: absolute; bottom: 30px; right: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px); border-radius: 50%;
+            width: 50px; height: 50px; display: flex;
+            justify-content: center; align-items: center;
+            cursor: pointer; border: 1px solid rgba(255,255,255,0.2);
+            transition: 0.3s;
         }
+        .sound-control:hover { transform: scale(1.1); background: rgba(255, 255, 255, 0.2); }
 
-        /* Faqat telefon yonbosh bo'lganda ishlaydigan CSS */
+        /* Faqat Landscape holatda ko'rsatish */
         @media screen and (orientation: landscape) {
             #orientation-overlay { display: none; }
-            .video-wrapper { display: block; }
+            .main-container { display: block; }
+        }
+
+        /* Pastki qismdagi gradient (Video ustidan) */
+        .overlay-shadow {
+            position: absolute; inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 40%);
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
 
     <div id="orientation-overlay">
-        <div class="phone-icon"></div>
-        <p>Iltimos, videoni ko'rish uchun <br> <b>telefoningizni yonbosh qiling</b></p>
+        <div class="phone-wrapper"></div>
+        <p class="text-hint">Eng yaxshi tajriba uchun telefonni yonbosh qiling</p>
     </div>
 
-    <div class="video-wrapper">
-        <button id="play-btn">Videoni ovoz bilan ko'rish</button>
-        <video id="myVideo" playsinline>
+    <div class="main-container">
+        <video id="bgVideo" autoplay muted loop playsinline>
             <source src="assets/video.mp4" type="video/mp4">
         </video>
+        
+        <div class="overlay-shadow"></div>
+
+        <div class="sound-control" id="unmuteBtn">
+            <svg id="speakerIcon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <line id="muteLine" x1="23" y1="9" x2="17" y2="15" stroke="red"></line>
+                <line id="muteLine2" x1="17" y1="9" x2="23" y2="15" stroke="red"></line>
+            </svg>
+        </div>
     </div>
 
     <script>
-        const video = document.getElementById('myVideo');
-        const playBtn = document.getElementById('play-btn');
+        const video = document.getElementById('bgVideo');
+        const unmuteBtn = document.getElementById('unmuteBtn');
+        const muteLine = document.getElementById('muteLine');
+        const muteLine2 = document.getElementById('muteLine2');
 
-        playBtn.addEventListener('click', () => {
-            video.play(); // Ovoz bilan boshlanadi
-            playBtn.style.display = 'none'; // Tugmani yashirish
+        unmuteBtn.addEventListener('click', () => {
+            if (video.muted) {
+                video.muted = false;
+                muteLine.style.display = 'none';
+                muteLine2.style.display = 'none';
+            } else {
+                video.muted = true;
+                muteLine.style.display = 'block';
+                muteLine2.style.display = 'block';
+            }
         });
 
-        // Agar foydalanuvchi videoni o'rtasida yana tik qilsa, pauza qilish (ixtiyoriy)
-        window.addEventListener("orientationchange", function() {
-            if (window.orientation === 0) { // Tik holat
-                video.pause();
-            }
+        // Avtomatik ijro etilishini tekshirish
+        window.addEventListener('load', () => {
+            video.play().catch(error => {
+                console.log("Autoplay bloklandi, foydalanuvchi interaksiyasi kutilmoqda");
+            });
         });
     </script>
 </body>
